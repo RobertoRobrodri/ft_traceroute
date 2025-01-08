@@ -20,7 +20,7 @@
 
 
 #define TTL_MAX 64
-#define TIMEOUT 1
+#define TIMEOUT 5
 #define PAYLOAD_SIZE 56
 #define PACKET_SIZE sizeof(struct icmphdr) + PAYLOAD_SIZE
 #define TRACE_SUCESS 42
