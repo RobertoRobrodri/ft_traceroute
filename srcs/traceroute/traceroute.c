@@ -9,7 +9,7 @@ Thus the amount of data received inside of an IP packet of type ICMP ECHO_REPLY
 will always be 8 bytes more than the requested data space (the ICMP header).
 */
 
-int send_ping(int socket_fd, unsigned long host, double *start) {
+int send_packet(int socket_fd, unsigned long host, double *start) {
 	static int seq = 0;
 	
 	// destination
@@ -35,9 +35,8 @@ int send_ping(int socket_fd, unsigned long host, double *start) {
 	icmp->checksum = calculate_checksum((unsigned short *)packet, PACKET_SIZE);
 	// send packet
 	*start = get_time_val();
-	int status = sendto(socket_fd, packet, sizeof(packet), 0, (struct sockaddr *)&dst, sizeof(dst));
-	if (status < 0) {
-		perror("Error sending packet\n");
+	if (sendto(socket_fd, packet, sizeof(packet), 0, (struct sockaddr *)&dst, sizeof(dst)) < 0) {
+		dprintf(STDERR_FILENO, "Sendto error: %s\n", strerror(errno));
 		return 1;
 	}
 	return 0;
@@ -45,7 +44,7 @@ int send_ping(int socket_fd, unsigned long host, double *start) {
 
 
 /*I wish they allowed functions to FLUSH THE FUCKING STDOUT I could just use stderr but thats kinda bullshit*/
-int recv_ping(int socket_fd, t_host_info *host_info, double *start, bool *success) {
+int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *success) {
 	unsigned char buffer[sizeof(struct iphdr) + sizeof(struct icmphdr) + PAYLOAD_SIZE];
 	struct sockaddr saddr;
 	socklen_t saddr_len = sizeof(saddr);
@@ -55,38 +54,37 @@ int recv_ping(int socket_fd, t_host_info *host_info, double *start, bool *succes
 	double end = get_time_val();
 	struct iphdr *ip = (struct iphdr *)buffer;
 	struct icmphdr *icmp = (struct icmphdr *)(buffer + ip->ihl * 4);
-	char src_ip[INET_ADDRSTRLEN];
 
 	if (buflen < 0) {
 		printf("* ");
 		return 0;
 	}
-	inet_ntop(AF_INET, &(ip->saddr), src_ip, INET_ADDRSTRLEN);
-	if (!(*success))
+	if (!(*success)) {
+		char src_ip[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &(ip->saddr), src_ip, INET_ADDRSTRLEN);
 		printf("%s", src_ip);
+	}
 	printf(" %.3fms", end - *start);
 	*success = true;
-	if (host_info->ip.s_addr == ip->saddr)
-		return TRACE_SUCESS;
-	return icmp->type;
+	return host_info->ip.s_addr == ip->saddr ? TRACE_SUCCESS : icmp->type;
 }
 
 void traceroute_loop(int socket_fd, t_host_info *host) {
 	double start = 0;
+
 	printf("traceroute to %s (%s): %d hops max\n", host->hostname, host->ip_str, TTL_MAX);
 	for (int i = 1; i <= TTL_MAX; i++)
 	{
 		// Traceroute sends 3 probes by default for each TTL value
 		printf("%d	", i);
 		if (setsockopt(socket_fd, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
-			perror("Error setting IP_TTL\n");
+			dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
 			exit(EXIT_FAILURE);
 		};
 		bool success = false;
 		for (int j = 0; j < DEFAULT_PROBES; j++) {
-			if (send_ping(socket_fd, host->ip.s_addr, &start) == 0) {
-				int break_code = recv_ping(socket_fd, host, &start, &success);
-				if (break_code == TRACE_SUCESS && j == 2)
+			if (send_packet(socket_fd, host->ip.s_addr, &start) == 0) {
+				if ((recv_packet(socket_fd, host, &start, &success) == TRACE_SUCCESS) && j == 2)
 					return ;
 			}
 		}

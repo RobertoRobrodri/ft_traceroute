@@ -6,11 +6,11 @@ static int ft_traceroute(t_host_info *host) {
 
 	// Create raw socket
 	if ((socket_fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP)) < 0) {
-		printf("Error creating socket\n");
+		dprintf(STDERR_FILENO, "Socket error: %s", strerror(errno));
 		return 1;
 	}
 	if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout)) < 0) {
-		perror("Error setting IP_TOS\n");
+		dprintf(STDERR_FILENO, "Setsockopt error: %s", strerror(errno));
 		return 1;
 	};
 	traceroute_loop(socket_fd, host);

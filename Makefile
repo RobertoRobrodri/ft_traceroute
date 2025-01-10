@@ -10,7 +10,6 @@ RESET 	= "\033[1;0m"
 #
 NAME 		= ft_traceroute
 CC 			= gcc
-# INCLUDE 	= -std=c++20
 CFLAGS 	= -Wall -Wextra -g -lm -fsanitize=address #-werror
 
 # PATHS #
@@ -18,22 +17,19 @@ CFLAGS 	= -Wall -Wextra -g -lm -fsanitize=address #-werror
 SRC_PATH    	= srcs
 SUBFILE1_PATH   = traceroute
 SUBFILE2_PATH   = dns
-SUBFILE3_PATH   = list
-SUBFILE4_PATH	= print
+SUBFILE3_PATH	= print
 OBJ_PATH    	= objects
 
 # SOURCES #
 #
 SUBFILE1_SRC = traceroute.c
 SUBFILE2_SRC = dns.c
-SUBFILE3_SRC = list.c
-SUBFILE4_SRC = print.c
+SUBFILE3_SRC = print.c
 
 SRC =	main.c \
 		$(addprefix $(SUBFILE1_PATH)/, $(SUBFILE1_SRC)) \
 		$(addprefix $(SUBFILE2_PATH)/, $(SUBFILE2_SRC)) \
-		$(addprefix $(SUBFILE3_PATH)/, $(SUBFILE3_SRC)) \
-		$(addprefix $(SUBFILE4_PATH)/, $(SUBFILE4_SRC))
+		$(addprefix $(SUBFILE3_PATH)/, $(SUBFILE3_SRC))
 
 # RULES #
 #
@@ -47,7 +43,6 @@ $(OBJ_PATH):
 	mkdir -p $(addprefix $(OBJ_PATH)/, $(SUBFILE1_PATH))
 	mkdir -p $(addprefix $(OBJ_PATH)/, $(SUBFILE2_PATH))
 	mkdir -p $(addprefix $(OBJ_PATH)/, $(SUBFILE3_PATH))
-	mkdir -p $(addprefix $(OBJ_PATH)/, $(SUBFILE4_PATH))
 
 $(OBJ_PATH)/%.o: $(SRC_PATH)/%.c | $(OBJ_PATH)
 	$(CC) $(CFLAGS) -c $< -o $@
