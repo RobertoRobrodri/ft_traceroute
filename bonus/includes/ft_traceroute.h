@@ -18,14 +18,16 @@
 #include <math.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <ctype.h>
 
-
-#define TTL_MAX 64
-#define TIMEOUT 3
 #define PAYLOAD_SIZE 56
 #define PACKET_SIZE sizeof(struct icmphdr) + PAYLOAD_SIZE
 #define TRACE_SUCCESS 42
+
 #define DEFAULT_PROBES 3
+#define TTL_MAX 64
+#define FIRST_HOP 1
+#define TIMEOUT 5
 
 typedef struct s_host_info {
 	char *hostname;
@@ -33,7 +35,14 @@ typedef struct s_host_info {
 	struct in_addr ip;
 } t_host_info;
 
-void traceroute_loop(int socket_fd, t_host_info *host);
+typedef struct s_trace_vars {
+	int probes;
+	int ttl_max;
+	int first_hop;
+	int timeout;
+} t_trace_vars;
+
+void traceroute_loop(int socket_fd, t_host_info *host, t_trace_vars opt_args);
 int send_packet(int socket_fd, unsigned long host, double *start);
 int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *success);
 
@@ -44,3 +53,4 @@ t_host_info *dns_look_up(char *host);
 double	get_time_val(void);
 
 void print_usage(void);
+bool str_isdigit(char *str);
