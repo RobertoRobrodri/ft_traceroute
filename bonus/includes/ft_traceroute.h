@@ -19,6 +19,7 @@
 #include <sys/time.h>
 #include <errno.h>
 #include <ctype.h>
+#include <netinet/udp.h>
 
 #define PAYLOAD_SIZE 56
 #define PACKET_SIZE sizeof(struct icmphdr) + PAYLOAD_SIZE
@@ -28,6 +29,7 @@
 #define TTL_MAX 64
 #define FIRST_HOP 1
 #define TIMEOUT 5
+#define DEFAULT_PORT 33434
 
 typedef struct s_host_info {
 	char *hostname;
@@ -40,10 +42,14 @@ typedef struct s_trace_vars {
 	int ttl_max;
 	int first_hop;
 	int timeout;
+	int port;
+	
+	bool icmp;
 } t_trace_vars;
 
 void traceroute_loop(int socket_fd, t_host_info *host, t_trace_vars opt_args);
-int send_packet(int socket_fd, unsigned long host, double *start);
+int send_packet_icmp(int socket_fd, unsigned long host, double *start);
+int send_packet_udp(int socket_fd, unsigned long host, double *start, int port);
 int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *success);
 
 unsigned short calculate_checksum(unsigned short *packet, size_t len);

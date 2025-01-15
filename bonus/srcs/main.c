@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	}
 	int i = 0;
 	char *host = NULL;
-	t_trace_vars opt_args = {DEFAULT_PROBES, TTL_MAX, FIRST_HOP, TIMEOUT};
+	t_trace_vars opt_args = {DEFAULT_PROBES, TTL_MAX, FIRST_HOP, TIMEOUT, DEFAULT_PORT, false};
 	while (++i < argc)
 	{
 		if (argv[i][0] == '-' && argv[i][1])
@@ -39,30 +39,38 @@ int main(int argc, char **argv) {
 				print_usage();
 				exit(EXIT_SUCCESS);
 			}
-			else if (strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--first-hop") == 0) {
-				if (str_isdigit(argv[++i]) == 0 || (opt_args.first_hop = atoi(argv[i])) <= 0 || opt_args.first_hop > 255) {
+			else if (strcmp(argv[i], "-f") == 0 | strcmp(argv[i], "--first-hop") == 0) {
+				if (str_isdigit(argv[i]) == 0 | (opt_args.first_hop = atoi(argv[i])) <= 0 | opt_args.first_hop > 255) {
 					dprintf(STDERR_FILENO, "traceroute: impossible distance '%s'\n", argv[i]);
 					return EXIT_FAILURE;
 				}
 			}
-			else if (strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--max-hop") == 0) {
-				if (str_isdigit(argv[++i]) == 0 || (opt_args.ttl_max = atoi(argv[i])) <= 0 || opt_args.ttl_max > 255) {
+			else if (strcmp(argv[i], "-m") == 0 | strcmp(argv[i], "--max-hop") == 0) {
+				if (str_isdigit(argv[i]) == 0 | (opt_args.ttl_max = atoi(argv[i])) <= 0 | opt_args.ttl_max > 255) {
 					dprintf(STDERR_FILENO, "traceroute: invalid hops value '%s'\n", argv[i]);
 					return EXIT_FAILURE;
 				}
 			}
-			else if (strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--tries") == 0) {
-				if (str_isdigit(argv[++i]) == 0 || (opt_args.probes = atoi(argv[i])) <= 0 || opt_args.probes > 10) {
+			else if (strcmp(argv[i], "-q") == 0 | strcmp(argv[i], "--tries") == 0) {
+				if (str_isdigit(argv[i]) == 0 | (opt_args.probes = atoi(argv[i])) <= 0 | opt_args.probes > 10) {
 					dprintf(STDERR_FILENO, "traceroute: number of tries should be between 1 and 10\n");
 					return EXIT_FAILURE;
 				}
 			}
-			else if (strcmp(argv[i], "-w") == 0 || strcmp(argv[i], "--wait") == 0) {
-				if (str_isdigit(argv[++i]) == 0 || (opt_args.timeout = atoi(argv[i])) <= 0 || opt_args.timeout > 60) {
+			else if (strcmp(argv[i], "-w") == 0 | strcmp(argv[i], "--wait") == 0) {
+				if (str_isdigit(argv[++i]) == 0 | (opt_args.timeout = atoi(argv[i])) <= 0 | opt_args.timeout > 60) {
 					dprintf(STDERR_FILENO, "traceroute: ridiculous waiting time `%s'\n", argv[i]);
 					return EXIT_FAILURE;
 				}
 			}
+			else if (strcmp(argv[i], "-p") == 0 | strcmp(argv[i], "--port") == 0) {
+				if (str_isdigit(argv[i]) == 0 | (opt_args.port = atoi(argv[i])) <= 0 | opt_args.port > 65535) {
+					dprintf(STDERR_FILENO, "traceroute: invalid port number `%s'\n", argv[i]);
+					return EXIT_FAILURE;
+				}
+			}
+			else if (strcmp(argv[i], "-I") == 0)
+				opt_args.icmp = true;
 			else {
 				dprintf(STDERR_FILENO, "traceroute: invalid option -- '%s'\n", argv[i]);
 				dprintf(STDERR_FILENO, "Try 'traceroute --help' for more information.\n");
@@ -75,6 +83,5 @@ int main(int argc, char **argv) {
 	ft_traceroute(host_info, opt_args);
 	free(host_info->hostname);
 	free(host_info);
-	printf("\n");
 	return EXIT_SUCCESS;
 }

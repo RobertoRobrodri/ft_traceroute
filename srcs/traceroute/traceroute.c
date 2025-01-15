@@ -84,8 +84,10 @@ void traceroute_loop(int socket_fd, t_host_info *host) {
 		bool success = false;
 		for (int j = 0; j < DEFAULT_PROBES; j++) {
 			if (send_packet(socket_fd, host->ip.s_addr, &start) == 0) {
-				if ((recv_packet(socket_fd, host, &start, &success) == TRACE_SUCCESS) && j == 2)
+				if ((recv_packet(socket_fd, host, &start, &success) == TRACE_SUCCESS) && j == 2) {
+					printf("\n");
 					return ;
+				}
 			}
 		}
 		printf("\n");

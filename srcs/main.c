@@ -50,6 +50,5 @@ int main(int argc, char **argv) {
 	ft_traceroute(host_info);
 	free(host_info->hostname);
 	free(host_info);
-	printf("\n");
 	return EXIT_SUCCESS;
 }
