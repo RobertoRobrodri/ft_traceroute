@@ -10,7 +10,8 @@ Thus the amount of data received inside of an IP packet of type ICMP ECHO_REPLY
 will always be 8 bytes more than the requested data space (the ICMP header).
 */
 
-int send_packet_icmp(int socket_fd, unsigned long host, double *start) {
+int send_packet_icmp(int socket_fd, unsigned long host, double *start, int port) {
+	(void)port;
 	static int seq = 0;
 	// destination
 	struct sockaddr_in dst;

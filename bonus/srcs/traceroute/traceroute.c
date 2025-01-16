@@ -27,7 +27,7 @@ int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *succ
 	return host_info->ip.s_addr == ip->saddr ? TRACE_SUCCESS : icmp->type;
 }
 
-void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args) {
+void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args, send_packet_func send_packet) {
 	double start = 0;
 
 	printf("traceroute to %s (%s): %d hops max\n", host->hostname, host->ip_str, opt_args.ttl_max);
@@ -35,29 +35,16 @@ void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace
 	do {
 		printf("%d	", seq);
 		bool success = false;
+		int send_socket = opt_args.icmp ? icmp_socket : udp_socket;
 		for (int j = 0; j < opt_args.probes; j++) {
-			if (opt_args.icmp) {
-				if (setsockopt(icmp_socket, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
-					dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
-					exit(EXIT_FAILURE);
-				};
-				if (send_packet_icmp(icmp_socket, host->ip.s_addr, &start) == 0) {
-					if ((recv_packet(icmp_socket, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
-						printf("\n");
-						return ;
-					}
-				}	
-			}
-			else {
-				if (setsockopt(udp_socket, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
-					dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
-					exit(EXIT_FAILURE);
-				};
-				if (send_packet_udp(udp_socket, host->ip.s_addr, &start, opt_args.port + seq) == 0) {
-					if ((recv_packet(icmp_socket, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
-						printf("\n");
-						return ;
-					}
+			if (setsockopt(send_socket, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
+				dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
+				exit(EXIT_FAILURE);
+			};
+			if (send_packet(send_socket, host->ip.s_addr, &start, opt_args.port + seq) == 0) {
+				if ((recv_packet(icmp_socket, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
+					printf("\n");
+					return ;
 				}
 			}
 		}

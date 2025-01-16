@@ -47,8 +47,10 @@ typedef struct s_trace_vars {
 	bool icmp;
 } t_trace_vars;
 
-void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args);
-int send_packet_icmp(int socket_fd, unsigned long host, double *start);
+typedef int (*send_packet_func)(int socket_fd, unsigned long host, double *start, int port);
+
+void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args, send_packet_func send_packet);
+int send_packet_icmp(int socket_fd, unsigned long host, double *start, int port);
 int send_packet_udp(int socket_fd, unsigned long host, double *start, int port);
 int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *success);
 
@@ -59,4 +61,4 @@ t_host_info *dns_look_up(char *host);
 double	get_time_val(void);
 
 void print_usage(void);
-bool str_isdigit(char *str);
+void handle_error(const char *message, const char *arg);

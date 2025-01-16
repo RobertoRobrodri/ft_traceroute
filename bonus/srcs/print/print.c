@@ -12,13 +12,8 @@ void print_usage(void) {
 	printf(" --help                     give this help list\n");
 }
 
-bool str_isdigit(char *str) {
-	while (*str)
-	{
-		if (isdigit(*str) == 0) {
-			return false;
-		}
-		str++;
-	}
-	return true ;
+void handle_error(const char *message, const char *arg) {
+    dprintf(STDERR_FILENO, message, arg);
+    dprintf(STDERR_FILENO, "Try 'traceroute --help' for more information.\n");
+    exit(EXIT_FAILURE);
 }
