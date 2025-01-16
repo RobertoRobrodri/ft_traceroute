@@ -47,7 +47,7 @@ typedef struct s_trace_vars {
 	bool icmp;
 } t_trace_vars;
 
-void traceroute_loop(int socket_fd, t_host_info *host, t_trace_vars opt_args);
+void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args);
 int send_packet_icmp(int socket_fd, unsigned long host, double *start);
 int send_packet_udp(int socket_fd, unsigned long host, double *start, int port);
 int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *success);

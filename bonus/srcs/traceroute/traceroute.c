@@ -27,30 +27,34 @@ int recv_packet(int socket_fd, t_host_info *host_info, double *start, bool *succ
 	return host_info->ip.s_addr == ip->saddr ? TRACE_SUCCESS : icmp->type;
 }
 
-void traceroute_loop(int socket_fd, t_host_info *host, t_trace_vars opt_args) {
+void traceroute_loop(int icmp_socket, int udp_socket, t_host_info *host, t_trace_vars opt_args) {
 	double start = 0;
 
 	printf("traceroute to %s (%s): %d hops max\n", host->hostname, host->ip_str, opt_args.ttl_max);
 	int i = opt_args.first_hop, seq = 1; 
 	do {
 		printf("%d	", seq);
-		if (setsockopt(socket_fd, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
-			dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
-			exit(EXIT_FAILURE);
-		};
 		bool success = false;
 		for (int j = 0; j < opt_args.probes; j++) {
 			if (opt_args.icmp) {
-				if (send_packet_icmp(socket_fd, host->ip.s_addr, &start) == 0) {
-					if ((recv_packet(socket_fd, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
+				if (setsockopt(icmp_socket, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
+					dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
+					exit(EXIT_FAILURE);
+				};
+				if (send_packet_icmp(icmp_socket, host->ip.s_addr, &start) == 0) {
+					if ((recv_packet(icmp_socket, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
 						printf("\n");
 						return ;
 					}
 				}	
 			}
 			else {
-				if (send_packet_udp(socket_fd, host->ip.s_addr, &start, opt_args.port + seq) == 0) {
-					if ((recv_packet(socket_fd, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
+				if (setsockopt(udp_socket, IPPROTO_IP, IP_TTL, &i, sizeof(i)) < 0) {
+					dprintf(STDERR_FILENO, "Setsockopt error: %s\n", strerror(errno));
+					exit(EXIT_FAILURE);
+				};
+				if (send_packet_udp(udp_socket, host->ip.s_addr, &start, opt_args.port + seq) == 0) {
+					if ((recv_packet(icmp_socket, host, &start, &success) == TRACE_SUCCESS) && j == opt_args.probes - 1) {
 						printf("\n");
 						return ;
 					}
